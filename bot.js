@@ -19,6 +19,11 @@ if (!fs.existsSync(uploadDir)) {
     console.log("📂 'uploads' katalogi yaratildi.");
 }
 
+// 📌 **Asosiy sahifa (`/`)**
+app.get("/", (req, res) => {
+    res.send("✅ Server ishlamoqda!");
+});
+
 // 📌 **Rasm yuklash API**
 app.post("/upload", async (req, res) => {
     console.log("✅ POST /upload so‘rovi qabul qilindi.");
