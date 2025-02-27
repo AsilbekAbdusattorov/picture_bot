@@ -8,32 +8,22 @@ require("dotenv").config();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-const WEBSITE_URL = "https://picture-bot.vercel.app/";
-const CHANNEL = "@AsilbekCode"; // Kanal username
-
+// CORS ni sozlash
 app.use(cors({
-  origin: WEBSITE_URL, 
-  methods: ["GET", "POST", "OPTIONS"], 
-  allowedHeaders: ["Content-Type", "Authorization"], 
-  credentials: true
+  origin: "https://picture-bot.vercel.app", // Frontend domeni
+  methods: ["GET", "POST", "OPTIONS"], // Ruxsat berilgan metodlar
+  allowedHeaders: ["Content-Type", "Authorization"], // Ruxsat berilgan sarlavhalar
+  credentials: true, // Foydalanuvchi ma'lumotlarini yuborishga ruxsat
 }));
 
-app.use(bodyParser.json({ limit: "10mb" })); 
+app.use(bodyParser.json({ limit: "10mb" })); // Rasmni qabul qilish uchun limitni oshirish
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const CHANNEL = "@AsilbekCode"; // Kanal username
+const WEBSITE_URL = "https://picture-bot.vercel.app/";
 let userSessions = {};
 
-// 📌 **Webhook URL-ni Render uchun moslashtirish**
-const WEBHOOK_URL = `https://your-render-app.onrender.com/webhook`; // ⬅ Bu yerni Render URL bilan almashtiring
-
-bot.telegram.setWebhook(WEBHOOK_URL);
-app.post("/webhook", (req, res) => {
-  bot.handleUpdate(req.body);
-  res.sendStatus(200);
-});
-
-// 📌 **Telegram bot /start komandasi**
+// Telegram bot /start komandasi
 bot.start(async (ctx) => {
     const userId = ctx.from.id;
     userSessions[userId] = false;
@@ -48,7 +38,7 @@ bot.start(async (ctx) => {
     });
 });
 
-// 📌 **Obuna tekshirish**
+// Obuna tekshirish
 bot.action("check", async (ctx) => {
     const userId = ctx.from.id;
     try {
@@ -66,7 +56,7 @@ bot.action("check", async (ctx) => {
     }
 });
 
-// 📌 **Frontenddan rasm qabul qilish**
+// Frontenddan rasm qabul qilish
 app.post("/upload", async (req, res) => {
     const { image, userId } = req.body;
     if (!image || !userId) {
@@ -75,21 +65,13 @@ app.post("/upload", async (req, res) => {
 
     const base64Data = image.replace(/^data:image\/png;base64,/, "");
     const imagePath = `./uploads/${userId}.png`;
+    fs.writeFileSync(imagePath, base64Data, "base64");
 
-    try {
-        fs.writeFileSync(imagePath, base64Data, "base64");
-
-        await bot.telegram.sendPhoto(userId, { source: imagePath });
-
-        res.json({ message: "✅ Rasm botga yuborildi" });
-
-        // Faylni serverdan o'chirish
-        fs.unlinkSync(imagePath);
-    } catch (err) {
-        console.error("Xatolik:", err);
-        res.status(500).json({ error: err.message });
-    }
+    bot.telegram.sendPhoto(userId, { source: imagePath })
+        .then(() => res.json({ message: "Rasm botga yuborildi" }))
+        .catch(err => res.status(500).json({ error: err.message }));
 });
 
-// 📌 **Serverni ishga tushirish**
-app.listen(PORT, () => console.log(`🚀 Server ${PORT}-portda ishlayapti!`));
+// Serverni ishga tushirish
+app.listen(3000, () => console.log("Server 3000-portda ishlayapti!"));
+bot.launch();
