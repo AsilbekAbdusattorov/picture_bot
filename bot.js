@@ -11,7 +11,8 @@ const app = express();
 // CORS ni sozlash
 app.use(cors({
   origin: "https://picture-bot.vercel.app", // Frontend domeni
-  methods: ["GET", "POST"], // Ruxsat berilgan metodlar
+  methods: ["GET", "POST", "OPTIONS"], // Ruxsat berilgan metodlar
+  allowedHeaders: ["Content-Type", "Authorization"], // Ruxsat berilgan sarlavhalar
   credentials: true, // Foydalanuvchi ma'lumotlarini yuborishga ruxsat
 }));
 
