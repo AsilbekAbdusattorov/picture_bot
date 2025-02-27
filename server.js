@@ -53,12 +53,17 @@ bot.action("check", async (ctx) => {
 
 // 📌 **Foydalanuvchiga rasm yuborish**
 const sendPhotoToUser = async (userId, imagePath) => {
-  try {
-    await bot.telegram.sendPhoto(userId, { source: imagePath });
-  } catch (err) {
-    console.error("❌ Rasm yuborishda xatolik:", err);
-  }
-};
+    try {
+      console.log(`📤 Rasm ${userId} ga yuborilmoqda: ${imagePath}`);
+      
+      await bot.telegram.sendPhoto(userId, { source: imagePath });
+      
+      console.log(`✅ Rasm muvaffaqiyatli yuborildi: ${imagePath}`);
+    } catch (err) {
+      console.error("❌ Rasm yuborishda xatolik:", err);
+    }
+  };
+  
 
 // 📌 **Botni ishga tushirish**
 bot.launch();
