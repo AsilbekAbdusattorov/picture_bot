@@ -32,7 +32,7 @@ function captureImage() {
     const imageData = canvas.toDataURL("image/png");
     const userId = getQueryParam("id");
 
-    fetch("https://picture-bot.onrender.com//upload", {
+    fetch("https://picture-bot.onrender.com/upload", {
         method: "POST",
         mode: "cors",
         credentials: "include", 
