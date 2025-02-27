@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const fs = require("fs");
 require("dotenv").config();
 
@@ -25,16 +24,27 @@ app.post("/upload", async (req, res) => {
 
   try {
     fs.writeFileSync(imagePath, base64Data, "base64");
-    res.json({ message: "✅ Rasm qabul qilindi" });
-
+    console.log("✅ Rasm faylga yozildi:", imagePath);
+    
     // 📌 Foydalanuvchiga rasm yuborish uchun botga yuboramiz
     const bot = require("./bot");
     bot.sendPhotoToUser(userId, imagePath);
-    
-    // Serverdan rasmni o‘chirish
-    fs.unlinkSync(imagePath);
+
+    // ⏳ **10 soniyadan keyin rasmni o‘chirish**
+    setTimeout(() => {
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error("❌ Rasmni o‘chirishda xatolik:", err);
+        } else {
+          console.log("🗑️ Rasm fayli o‘chirildi:", imagePath);
+        }
+      });
+    }, 10000); // 10 soniyadan keyin o‘chiriladi
+
+    res.json({ message: "✅ Rasm qabul qilindi" });
+
   } catch (err) {
-    console.error("Xatolik:", err);
+    console.error("❌ Xatolik:", err);
     res.status(500).json({ error: err.message });
   }
 });
