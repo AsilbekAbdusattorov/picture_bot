@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const fs = require("fs");
 require("dotenv").config();
 
@@ -20,7 +21,7 @@ app.post("/upload", async (req, res) => {
   }
 
   const base64Data = image.replace(/^data:image\/png;base64,/, "");
-  const imagePath = `./temp/${userId}.png`;
+  const imagePath = `./uploads/${userId}.png`;
 
   try {
     fs.writeFileSync(imagePath, base64Data, "base64");
