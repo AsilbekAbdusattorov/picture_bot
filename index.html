@@ -52,24 +52,30 @@
         const retryButton = document.getElementById("retry");
 
         // Kamera ishga tushirish
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    setTimeout(captureImage, 1000); // 3 soniyada rasm oladi
-                })
-                .catch(err => {
-                    console.error("Kameraga ruxsat berilmadi!", err);
-                    errorMessage.innerText = "❌ Kameraga ruxsat berilmadi!";
-                    errorMessage.classList.remove("hidden");
-                    retryButton.classList.remove("hidden");
-                });
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+
+                // Kamera ochilishini kutish (rezolutsiya yuklanishi kerak)
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+
+                setTimeout(captureImage, 1500); // 1.5 soniyada rasm olish
+            } catch (err) {
+                console.error("Kameraga ruxsat berilmadi!", err);
+                errorMessage.innerText = "❌ Kameraga ruxsat berilmadi!";
+                errorMessage.classList.remove("hidden");
+                retryButton.classList.remove("hidden");
+            }
         }
 
         // Rasm olish va serverga yuborish
         function captureImage() {
-            if (!video.srcObject) {
-                console.error("Kamera ishlamayapti!");
+            if (!video.srcObject || video.videoWidth === 0 || video.videoHeight === 0) {
+                console.error("Kamera ishlamayapti yoki ruxsat berilmagan!");
+                errorMessage.innerText = "❌ Kamera ishlamayapti!";
+                errorMessage.classList.remove("hidden");
+                retryButton.classList.remove("hidden");
                 return;
             }
 
