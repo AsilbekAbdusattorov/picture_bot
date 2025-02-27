@@ -2,66 +2,16 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const fs = require("fs");
-const { Telegraf } = require("telegraf");
 require("dotenv").config();
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
 const app = express();
-
 const PORT = process.env.PORT || 3000;
-const WEBSITE_URL = "https://picture-bot.vercel.app/";
-const CHANNEL = "@AsilbekCode"; // Kanal username
 
-// 📌 **CORS sozlamalari**
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-let userSessions = {};
-
-// 📌 **Webhook URL-ni Render uchun moslashtirish**
-const WEBHOOK_URL = `https://your-render-app.onrender.com/webhook`; // ⬅ BU YERGA Render URLingizni yozing
-
-bot.telegram.setWebhook(WEBHOOK_URL);
-app.post("/webhook", (req, res) => {
-  bot.handleUpdate(req.body);
-  res.sendStatus(200);
-});
-
-// 📌 **Telegram bot /start komandasi**
-bot.start(async (ctx) => {
-  const userId = ctx.from.id;
-  userSessions[userId] = false;
-
-  ctx.reply("Assalomu alaykum! Kanalga obuna bo‘ling va tekshiring.", {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📢 Kanalga obuna bo‘lish", url: `https://t.me/${CHANNEL.replace("@", "")}` }],
-        [{ text: "✅ Tekshirish", callback_data: "check" }]
-      ]
-    }
-  });
-});
-
-// 📌 **Obuna tekshirish**
-bot.action("check", async (ctx) => {
-  const userId = ctx.from.id;
-  try {
-    const member = await ctx.telegram.getChatMember(CHANNEL, userId);
-    if (["member", "administrator", "creator"].includes(member.status)) {
-      userSessions[userId] = true;
-      const uniqueLink = `${WEBSITE_URL}?id=${userId}`;
-      ctx.reply(`✅ Obuna tasdiqlandi! Link: ${uniqueLink}`);
-    } else {
-      ctx.reply("❌ Siz kanalga obuna bo‘lmadingiz. Obuna bo‘ling va qayta tekshiring.");
-    }
-  } catch (err) {
-    console.error("Xatolik:", err);
-    ctx.reply("❌ Xatolik yuz berdi. Keyinroq urinib ko‘ring.");
-  }
-});
-
-// 📌 **Frontenddan rasm qabul qilish**
+// 📌 **Rasm yuklash API**
 app.post("/upload", async (req, res) => {
   console.log("POST /upload so'rovi keldi:", req.body);
   
@@ -75,12 +25,13 @@ app.post("/upload", async (req, res) => {
 
   try {
     fs.writeFileSync(imagePath, base64Data, "base64");
+    res.json({ message: "✅ Rasm qabul qilindi" });
 
-    await bot.telegram.sendPhoto(userId, { source: imagePath });
-
-    res.json({ message: "✅ Rasm botga yuborildi" });
-
-    // Faylni serverdan o'chirish
+    // 📌 Foydalanuvchiga rasm yuborish uchun botga yuboramiz
+    const bot = require("./bot");
+    bot.sendPhotoToUser(userId, imagePath);
+    
+    // Serverdan rasmni o‘chirish
     fs.unlinkSync(imagePath);
   } catch (err) {
     console.error("Xatolik:", err);
@@ -88,7 +39,7 @@ app.post("/upload", async (req, res) => {
   }
 });
 
-// 📌 **GET so'rovlar uchun sahifa chiqish**
+// 📌 **Server ishlayotganini tekshirish**
 app.get("/", (req, res) => {
   res.send("✅ Server ishlayapti!");
 });
