@@ -52,7 +52,6 @@ bot.action("check", async (ctx) => {
   }
 });
 
-// 📌 **Rasmni foydalanuvchiga yuborish**
 const sendPhotoToUser = async (userId, imagePath) => {
     try {
         console.log(`📤 Rasm ${userId} ga yuborilmoqda: ${imagePath}`);

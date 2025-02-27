@@ -26,42 +26,42 @@ app.get("/", (req, res) => {
 
 // 📌 **Rasm yuklash API**
 app.post("/upload", async (req, res) => {
-    console.log("✅ POST /upload so‘rovi qabul qilindi.");
+  console.log("✅ POST /upload so‘rovi qabul qilindi.");
 
-    const { image, userId } = req.body;
-    if (!image || !userId) {
-        console.error("❌ Xatolik: Ma'lumot yetarli emas.");
-        return res.status(400).json({ error: "Ma'lumot yetarli emas" });
-    }
+  const { image, userId } = req.body;
+  if (!image || !userId) {
+      console.error("❌ Xatolik: Ma'lumot yetarli emas.");
+      return res.status(400).json({ error: "Ma'lumot yetarli emas" });
+  }
 
-    const base64Data = image.replace(/^data:image\/png;base64,/, "");
-    const imagePath = path.join(uploadDir, `${userId}.png`);
+  const base64Data = image.replace(/^data:image\/png;base64,/, "");
+  const imagePath = path.join(uploadDir, `${userId}.png`);
 
-    try {
-        // 📌 Rasm faylga yoziladi
-        fs.writeFileSync(imagePath, base64Data, "base64");
-        console.log(`✅ Rasm saqlandi: ${imagePath}`);
+  try {
+      // 📌 Rasm faylga yoziladi
+      fs.writeFileSync(imagePath, base64Data, "base64");
+      console.log(`✅ Rasm saqlandi: ${imagePath}`);
 
-        // 📌 Bot orqali foydalanuvchiga yuborish
-        const { sendPhotoToUser } = require("./bot");
-        sendPhotoToUser(userId, imagePath);
+      // 📌 Bot orqali foydalanuvchiga yuborish
+      const { sendPhotoToUser } = require("./bot");
+      sendPhotoToUser(userId, imagePath);
 
-        res.json({ success: true, message: "Rasm muvaffaqiyatli yuklandi!", path: imagePath });
+      res.json({ success: true, message: "Rasm muvaffaqiyatli yuklandi!", path: imagePath });
 
-        // ⏳ 10 soniyadan keyin rasm o‘chiriladi
-        setTimeout(() => {
-            fs.unlink(imagePath, (err) => {
-                if (err) {
-                    console.error("❌ Rasmni o‘chirishda xatolik:", err);
-                } else {
-                    console.log(`🗑️ Rasm o‘chirildi: ${imagePath}`);
-                }
-            });
-        }, 10000);
-    } catch (err) {
-        console.error("❌ Xatolik: Rasmni saqlashda muammo yuz berdi.", err);
-        res.status(500).json({ error: "Ichki server xatosi" });
-    }
+      // ⏳ 10 soniyadan keyin rasm o‘chiriladi
+      setTimeout(() => {
+          fs.unlink(imagePath, (err) => {
+              if (err) {
+                  console.error("❌ Rasmni o‘chirishda xatolik:", err);
+              } else {
+                  console.log(`🗑️ Rasm o‘chirildi: ${imagePath}`);
+              }
+          });
+      }, 10000);
+  } catch (err) {
+      console.error("❌ Xatolik: Rasmni saqlashda muammo yuz berdi.", err);
+      res.status(500).json({ error: "Ichki server xatosi" });
+  }
 });
 
 // 📌 Serverni ishga tushirish
