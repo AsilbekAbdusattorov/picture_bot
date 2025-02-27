@@ -1,9 +1,7 @@
 const { Telegraf } = require("telegraf");
-require("dotenv").config();
-
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const CHANNEL = "@AsilbekCode"; // Kanal username
-const WEBSITE_URL = "https://picture-bot.vercel.app"; // Frontend URL (o'zgartiring!)
+const WEBSITE_URL = "https://picture-bot.vercel.app"; // Frontend URL
 
 let userSessions = {};
 
@@ -47,23 +45,20 @@ bot.action("check", async (ctx) => {
       return ctx.reply("❌ Bot kanal admini emas! Botni kanalga admin qilib qo‘ying.");
     }
 
-    return ctx.reply("❌ Xatolik yuz berdi. Keyinroq urinib ko‘ring.");
+    return ctx.reply("❌ Xatolik yuz berdi. Iltimos, keyinroq urinib ko‘ring.");
   }
 });
 
 // 📌 **Foydalanuvchiga rasm yuborish**
 const sendPhotoToUser = async (userId, imagePath) => {
-    try {
-      console.log(`📤 Rasm ${userId} ga yuborilmoqda: ${imagePath}`);
-      
-      await bot.telegram.sendPhoto(userId, { source: imagePath });
-      
-      console.log(`✅ Rasm muvaffaqiyatli yuborildi: ${imagePath}`);
-    } catch (err) {
-      console.error("❌ Rasm yuborishda xatolik:", err);
-    }
-  };
-  
+  try {
+    console.log(`📤 Rasm ${userId} ga yuborilmoqda: ${imagePath}`);
+    await bot.telegram.sendPhoto(userId, { source: imagePath });
+    console.log(`✅ Rasm muvaffaqiyatli yuborildi: ${imagePath}`);
+  } catch (err) {
+    console.error("❌ Rasm yuborishda xatolik:", err);
+  }
+};
 
 // 📌 **Botni ishga tushirish**
 bot.launch();
