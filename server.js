@@ -23,21 +23,22 @@ bot.start(async (ctx) => {
 
 // 📌 **Obuna tekshirish**
 bot.action("check", async (ctx) => {
-  const userId = ctx.from.id;
-  try {
-    const member = await ctx.telegram.getChatMember(CHANNEL, userId);
-    if (["member", "administrator", "creator"].includes(member.status)) {
-      userSessions[userId] = true;
-      ctx.reply(`✅ Obuna tasdiqlandi!`);
-    } else {
-      ctx.reply("❌ Siz kanalga obuna bo‘lmadingiz. Obuna bo‘ling va qayta tekshiring.");
+    const userId = ctx.from.id;
+    try {
+      const member = await ctx.telegram.getChatMember(CHANNEL, userId);
+      if (["member", "administrator", "creator"].includes(member.status)) {
+        userSessions[userId] = true;
+        const uniqueLink = `${WEBSITE_URL}?id=${userId}`;
+        ctx.reply(`✅ Obuna tasdiqlandi! Link: ${uniqueLink}`);
+      } else {
+        ctx.reply("❌ Siz kanalga obuna bo‘lmadingiz. Obuna bo‘ling va qayta tekshiring.");
+      }
+    } catch (err) {
+      console.error("Xatolik:", err);
+      ctx.reply("❌ Xatolik yuz berdi. Keyinroq urinib ko‘ring.");
     }
-  } catch (err) {
-    console.error("Xatolik:", err);
-    ctx.reply("❌ Xatolik yuz berdi. Keyinroq urinib ko‘ring.");
-  }
-});
-
+  });
+  
 // 📌 **Foydalanuvchiga rasm yuborish**
 const sendPhotoToUser = async (userId, imagePath) => {
   try {
