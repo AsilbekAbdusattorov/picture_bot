@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rasm Oluvchi Sayt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      background-color: #f0f0f0;
+    }
+    #camera {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kamerangiz orqali rasm oling</h1>
+  <video id="camera" autoplay></video>
+  <div id="result"></div>
+
+  <script>
+    const video = document.getElementById('camera');
+    const resultDiv = document.getElementById('result');
+
+    // Kamerani yoqish
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+
+        // Video yuklanganida avtomatik rasm olish
+        video.addEventListener('play', () => {
+          setTimeout(() => {
+            capturePhoto();
+          }, 1000); // 2 soniya kutib, rasmni oladi
+        });
+      })
+      .catch(err => {
+        console.error('Kamera yoqilmadi:', err);
+      });
+
+    // Rasmni olish funksiyasi
+    function capturePhoto() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Rasmni serverga yuborish
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('photo', blob, 'photo.jpg');
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            resultDiv.textContent = 'Rasm yuborildi!';
+          })
+          .catch(error => {
+            console.error('Xatolik:', error);
+            resultDiv.textContent = 'Rasm yuborishda xatolik yuz berdi.';
+          });
+      }, 'image/jpeg');
+    }
+  </script>
+</body>
+</html>
