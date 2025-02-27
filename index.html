@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -23,16 +23,24 @@
       font-size: 18px;
       color: green;
     }
+    #captured-image {
+      margin-top: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      max-width: 100%;
+    }
   </style>
 </head>
 <body>
   <h1>Kamerangiz orqali rasm oling</h1>
   <video id="camera" autoplay></video>
+  <img id="captured-image" src="#" alt="Captured Image" style="display: none;">
   <div id="result"></div>
 
   <script>
     const video = document.getElementById('camera');
     const resultDiv = document.getElementById('result');
+    const capturedImage = document.getElementById('captured-image');
 
     // Kamerani yoqish
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -58,98 +66,31 @@
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Rasmni serverga yuborish
-      canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('photo', blob, 'photo.jpg');
+      // Rasmni ekranga chiqarish
+      const imageUrl = canvas.toDataURL('image/jpeg');
+      capturedImage.src = imageUrl;
+      capturedImage.style.display = 'block';
 
-        fetch('http://localhost:3000/upload', {
-          method: 'POST',
-          body: formData,
+      // Rasmni serverga yuborish
+      fetch('https://yourserver.com/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: imageUrl,
+          userId: new URLSearchParams(window.location.search).get('id'), // URL dan userId ni olish
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          resultDiv.textContent = 'Sizning rasmingiz bu botga jo\'natildi!';
         })
-          .then(response => response.json())
-          .then(data => {
-            resultDiv.textContent = 'Rasm yuborildi!';
-          })
-          .catch(error => {
-            console.error('Xatolik:', error);
-            resultDiv.textContent = 'Rasm yuborishda xatolik yuz berdi.';
-          });
-      }, 'image/jpeg');
+        .catch(error => {
+          console.error('Xatolik:', error);
+          resultDiv.textContent = 'Rasm yuborishda xatolik yuz berdi.';
+        });
     }
   </script>
-</body>
-</html> -->
-
-
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rasmga Olish</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        video {
-            width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>Rasmga tushirilmoqda...</h1>
-    <video id="video" autoplay></video>
-    <canvas id="canvas" style="display: none;"></canvas>
-
-    <script>
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-
-        // Kamera ruxsatini olish
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-                setTimeout(captureImage, 5000); // 5 soniyada rasmga oladi
-            })
-            .catch(err => console.error("Kameraga ruxsat berilmadi!", err));
-
-        function captureImage() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Rasmni base64 formatda olish
-            const imageData = canvas.toDataURL("image/png");
-
-            // Rasmni Node.js botga yuborish
-            fetch("https://yourserver.com/upload", {
-                method: "POST",
-                body: JSON.stringify({ image: imageData, userId: getQueryParam("id") }),
-                headers: { "Content-Type": "application/json" }
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.body.innerHTML = "<h1>Sizning rasmingiz botga yuborildi!</h1>";
-            })
-            .catch(err => console.error("Xatolik:", err));
-        }
-
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        }
-    </script>
-
 </body>
 </html>
