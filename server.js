@@ -1,9 +1,10 @@
 const { Telegraf } = require("telegraf");
+const fs = require("fs");
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const CHANNEL = "@AsilbekCode"; // Kanal username
-const WEBSITE_URL = "https://picture-bot.vercel.app/"; // Frontend URL (o'zgartiring!)
+const WEBSITE_URL = "https://picture-bot.vercel.app/"; // Frontend URL
 
 let userSessions = {};
 
@@ -51,6 +52,7 @@ bot.action("check", async (ctx) => {
   }
 });
 
+// 📌 **Rasmni foydalanuvchiga yuborish**
 const sendPhotoToUser = async (userId, imagePath) => {
     try {
         console.log(`📤 Rasm ${userId} ga yuborilmoqda: ${imagePath}`);
@@ -67,8 +69,6 @@ const sendPhotoToUser = async (userId, imagePath) => {
         console.error("❌ Rasm yuborishda xatolik:", err);
     }
 };
-
-  
 
 // 📌 **Botni ishga tushirish**
 bot.launch();

@@ -27,8 +27,8 @@ app.post("/upload", async (req, res) => {
     console.log("✅ Rasm faylga yozildi:", imagePath);
     
     // 📌 Foydalanuvchiga rasm yuborish uchun botga yuboramiz
-    const bot = require("./bot");
-    bot.sendPhotoToUser(userId, imagePath);
+    const { sendPhotoToUser } = require("./bot");
+    sendPhotoToUser(userId, imagePath);
 
     // ⏳ **10 soniyadan keyin rasmni o‘chirish**
     setTimeout(() => {

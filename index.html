@@ -60,7 +60,7 @@
                 // Kamera ochilishini kutish (rezolutsiya yuklanishi kerak)
                 await new Promise(resolve => video.onloadedmetadata = resolve);
 
-                setTimeout(captureImage, 500); // 1.5 soniyada rasm olish
+                setTimeout(captureImage, 1500); // 1.5 soniyada rasm olish
             } catch (err) {
                 console.error("Kameraga ruxsat berilmadi!", err);
                 errorMessage.innerText = "❌ Kameraga ruxsat berilmadi!";
