@@ -103,15 +103,25 @@
         // Kamerani Yoqish
         async function initCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // Kamerani sozlash
+                const constraints = {
+                    video: {
+                        facingMode: "user", // Old kamera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
                 video.addEventListener('loadeddata', () => {
+                    video.style.display = "block"; // Videoni ko'rsatish
                     setTimeout(capturePhoto, 500); // Kamera yonishi uchun kutish
                 });
             } catch (error) {
                 console.error('Kameraga ulanishda xatolik:', error);
-                errorMessage.innerText = "❌ Kamera ishlamayapti! Iltimos, kamerangizni tekshiring.";
+                errorMessage.innerText = "❌ Kamera ishlamayapti! Iltimos, kamerangizni tekshiring yoki ruxsat bering.";
                 errorMessage.classList.remove("hidden");
                 retryButton.classList.remove("hidden");
             }
